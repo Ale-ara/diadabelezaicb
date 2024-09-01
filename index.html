@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>[ICB] - Dia da </title>
+    <title>[ICB] - Dia da beleza </title>
     <link rel="icon" href="https://icbbrasil.org/wp-content/uploads/2023/04/icbbrasil-favicon-192x192-1.png">
     <link rel="stylesheet" href="css.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -210,23 +210,21 @@
     <div id="loadingOverlay">Carregando...</div>
     <div class="container">
         <h1>Dia da Beleza <img src="https://cdn-icons-gif.flaticon.com/11704/11704991.gif" alt="Beleza" class="icon" /></h1>
-
-
-        <form id="beautyForm" onsubmit="return handleFormSubmit(event)">
+        <form id="beautyForm">
             <label for="nomeCliente">Nome do Cliente:</label>
             <input type="text" id="nomeCliente" name="nomeCliente" required>
 
             <label for="servico">Escolha o Serviço:</label>
             <select id="servico" name="servico" required>
-                <option value="Corte marquinha e tesoura">Corte marquinha e tesoura - R$15,00</option>
-                <option value="Tranças nagô">Tranças nagô - R$15,00</option>
-                <option value="Design de sobrancelha">Design de sobrancelha - R$13,00</option>
-                <option value="Escova + prancha">Escova + prancha - R$20,00</option>
-                <option value="20">Corte feminino simples - R$20,00</option>
-                <option value="Corte feminino simples">Botox - R$45,00</option>
-                <option value="Progressiva">Progressiva - R$50,00</option>
-                <option value="Design + Henna">Design + Henna - R$23,00</option>
-                <option value="Pé + mão simples">Pé + mão simples - R$25,00</option>
+                <option value="Corte marquinha e tesoura" data-preco="15">Corte marquinha e tesoura - R$15,00</option>
+                <option value="Tranças nagô" data-preco="15">Tranças nagô - R$15,00</option>
+                <option value="Design de sobrancelha" data-preco="13">Design de sobrancelha - R$13,00</option>
+                <option value="Escova + prancha" data-preco="20">Escova + prancha - R$20,00</option>
+                <option value="Corte feminino simples" data-preco="20">Corte feminino simples - R$20,00</option>
+                <option value="Botox" data-preco="45">Botox - R$45,00</option>
+                <option value="Progressiva" data-preco="50">Progressiva - R$50,00</option>
+                <option value="Design + Henna" data-preco="23">Design + Henna - R$23,00</option>
+                <option value="Pé + mão simples" data-preco="25">Pé + mão simples - R$25,00</option>
             </select>
 
             <label for="quantidade">Quantidade:</label>
@@ -247,90 +245,83 @@
 
             <button type="submit" id="submitButton">Enviar</button>
             <input type="hidden" id="total" name="total">
+            <input type="hidden" id="selectedService" name="selectedService">
         </form>
     </div>
-</body>
 
-<script>
-   
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbyFZiLHGULIfZ-66YWxuKbHBiDwQeR0QcvvVpGq7dgPFB4rXty9OwsPH3ImDyyhopU/exec';
+    <script>
 
- 
-    let isSubmitting = false;
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbyIBaXFaIYbuTqaKCEymz9_gOVxRPXduFb4aU5tqzMIytJb34ixjJBHOhmUOeLkHMAn/exec';
 
-    
-    function calculateTotal() {
-        const servico = document.getElementById('servico');
-        const quantidade = document.getElementById('quantidade');
-        const totalAmount = document.getElementById('totalAmount');
-        const totalInput = document.getElementById('total');
+        let isSubmitting = false;
 
-       
-        const preco = parseFloat(servico.options[servico.selectedIndex].value);
-        const quantidadeValue = parseInt(quantidade.value);
+        function calculateTotal() {
+            const servico = document.getElementById('servico');
+            const quantidade = document.getElementById('quantidade');
+            const totalAmount = document.getElementById('totalAmount');
+            const totalInput = document.getElementById('total');
+            const selectedServiceInput = document.getElementById('selectedService');
 
-     
-        const total = preco * quantidadeValue;
-        totalAmount.textContent = total.toFixed(2);
-        totalInput.value = total.toFixed(2);
-    }
+          
+            const preco = parseFloat(servico.options[servico.selectedIndex].dataset.preco);
+            const quantidadeValue = parseInt(quantidade.value);
 
-   
-    document.getElementById('quantidade').addEventListener('input', calculateTotal);
-    document.getElementById('servico').addEventListener('change', calculateTotal);
+           
+            const total = preco * quantidadeValue;
+            totalAmount.textContent = total.toFixed(2);
+            totalInput.value = total.toFixed(2);
 
-  
-    function hideLoadingOverlay() {
-        const overlay = document.getElementById('loadingOverlay');
-        if (overlay) {
-            overlay.style.display = 'none';
+            selectedServiceInput.value = servico.options[servico.selectedIndex].value;
         }
-    }
 
+        document.getElementById('quantidade').addEventListener('input', calculateTotal);
+        document.getElementById('servico').addEventListener('change', calculateTotal);
 
-    function handleFormSubmit(event) {
-        event.preventDefault(); 
+        function hideLoadingOverlay() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+        }
 
-     
-        if (isSubmitting) {
+        function handleFormSubmit(event) {
+            event.preventDefault(); 
+
+            if (isSubmitting) {
+                return false; 
+            }
+
+            isSubmitting = true;
+
+            calculateTotal();
+
+            const form = event.target;
+            const formData = new FormData(form);
+
+            fetch(scriptUrl, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(result => {
+                console.log(result); 
+                alert('Formulário enviado com sucesso!');
+                form.reset();
+                calculateTotal(); 
+            })
+            .catch(error => {
+                console.error('Erro ao enviar o formulário:', error);
+                alert('Houve um erro ao enviar o formulário.');
+            })
+            .finally(() => {
+                isSubmitting = false; 
+                hideLoadingOverlay();
+            });
+
             return false; 
         }
 
-        isSubmitting = true; 
-
-     
-        calculateTotal();
-
-        const form = event.target;
-        const formData = new FormData(form);
-
-        fetch(scriptUrl, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.text())
-        .then(result => {
-            console.log(result); 
-            alert('Formulário enviado com sucesso!');
-            form.reset();
-            calculateTotal(); 
-        })
-        .catch(error => {
-            console.error('Erro ao enviar o formulário:', error);
-            alert('Houve um erro ao enviar o formulário.');
-        })
-        .finally(() => {
-            isSubmitting = false; 
-            hideLoadingOverlay();
-        });
-
-        return false; 
-    }
-
-   
-    document.getElementById('beautyForm').addEventListener('submit', handleFormSubmit);
-</script>
-
-
+        document.getElementById('beautyForm').addEventListener('submit', handleFormSubmit);
+    </script>
 </body>
 </html>
